@@ -148,11 +148,15 @@ app.post('/login', async (req, res) => {
         };
     const token = jwt.sign(payload, process.env.TOKEN_KEY);
 
-      const refresh = await Token.findOneAndUpdate({
-        email:email
-      },{
+      const refresh = await Token.create({
+        email:email,
+        userId: user._id,
         token: token,
         type: "refresh"
+      })
+      await Token.deleteMany({
+        email:email,
+        type:"mailVerification"
       })
       res.status(200).json({success: true,user, token: refresh});
     }else{
@@ -206,9 +210,12 @@ app.post("/forget-password",async (req, res) => {
     email: req.body.email
   })
 
+  console.log("done1")
+
   const user =await User.findOne({
     email: req.body.email
   })
+  console.log("done2")
 
   const expires = moment().add("10", 'minutes');
     
@@ -219,11 +226,13 @@ app.post("/forget-password",async (req, res) => {
       type:"resetPasswordToken"
   };
   const token = jwt.sign(payload, process.env.TOKEN_KEY);
+  console.log("done3")
 
   const otp = otpGenerator.generate(6, {  
     lowerCaseAlphabets: false,
     upperCaseAlphabets: false,
     specialChars: false, });
+    console.log("done4")
 
   const forgetToken = await Token.create({
     userId: user._id,
@@ -232,14 +241,16 @@ app.post("/forget-password",async (req, res) => {
     otp: otp,
     email: req.body.email
   })
+  console.log("done5")
 
   const mailData = { 
     from:"ramiz.pcsglobal@gmail.com",
-    to:email.toLowerCase().trim(),
+    to:req.body.email.toLowerCase().trim(),
     subject:"VeriFy Your Email",
     text:``,
     html:`<h1>Your reset mail varification OTP is <span style="color:red;" > ${otp} </span></h1>`
   }
+  console.log("done6")
   
   transporter.sendMail(mailData,(err,data)=>{
     try{
@@ -260,6 +271,33 @@ app.post("/forget-password",async (req, res) => {
   res.status(400).json({success: false});
 }
 
+})
+
+app.post("/resetPassword", async (req, res) => {
+try{
+  const token = await Token.findOne({
+    otp: req.body.otp
+  })
+  if(!token) return  res.status(400).json({success: false, message: "enter a valid otp"});
+
+  const hashedPassword = await bcrypt.hash(req.body.password, 10);
+
+
+
+
+  const user = await User.findOneAndUpdate({
+    email: token.email
+  },
+  {password: hashedPassword})
+
+  await Token.deleteMany({
+    email: user.email
+  })
+
+  return res.status(200).json({success: true, user})
+}catch(error){
+  res.status(400).json({success: false});
+}
 })
 
 
