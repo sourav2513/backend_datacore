@@ -10,7 +10,7 @@ const tokenSchema = new mongoose.Schema({
     token:String,
     type:{
         type:String,
-        enum:["mailVerification", "refresh"]
+        enum:["mailVerification", "refresh", "resetPasswordToken"]
     },
     otp:String,
     email:String,

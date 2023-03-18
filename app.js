@@ -199,6 +199,72 @@ app.post("/userType", async (req, res) => {
   }
 })
 
+app.post("/forget-password",async (req, res) => {
+
+  try{
+  await Token.deleteMany({
+    email: req.body.email
+  })
+
+  const user =await User.findOne({
+    email: req.body.email
+  })
+
+  const expires = moment().add("10", 'minutes');
+    
+    const payload = {
+      sub: user._id,
+      iat: moment().unix(),
+      exp: expires.unix(),
+      type:"resetPasswordToken"
+  };
+  const token = jwt.sign(payload, process.env.TOKEN_KEY);
+
+  const otp = otpGenerator.generate(6, {  
+    lowerCaseAlphabets: false,
+    upperCaseAlphabets: false,
+    specialChars: false, });
+
+  const forgetToken = await Token.create({
+    userId: user._id,
+    token: token,
+    type: "resetPasswordToken",
+    otp: otp,
+    email: req.body.email
+  })
+
+  const mailData = { 
+    from:"ramiz.pcsglobal@gmail.com",
+    to:email.toLowerCase().trim(),
+    subject:"VeriFy Your Email",
+    text:``,
+    html:`<h1>Your reset mail varification OTP is <span style="color:red;" > ${otp} </span></h1>`
+  }
+  
+  transporter.sendMail(mailData,(err,data)=>{
+    try{
+      if(err){
+        console.log("reject:",err)
+    }else{ 
+        console.log("success")
+    }
+    }catch(e){
+      console.log(e)
+    }
+  })
+
+
+  res.status(201).json({success: true, user});
+
+}catch(error){
+  res.status(400).json({success: false});
+}
+
+})
+
+
+
+
 app.use('*', (req, res) => {
   res.status(404).json({
     success: 'false',
