@@ -29,7 +29,7 @@ const details = {
 const transporter = nodemailer.createTransport(details)
 
 
-app.get('/welcome',async (req, res) => {
+app.get('/welcome',(req, res) => {
   res.status(200).send('welcome to datacore');
 });
 
