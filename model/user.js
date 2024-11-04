@@ -12,8 +12,6 @@ const userSchema = new mongoose.Schema({
   isMailVerified: { type: Boolean, default: false},
   registrationNumber: String,
   examRoll: String
-
-
 });
 
 module.exports = mongoose.model("User", userSchema);

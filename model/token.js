@@ -2,7 +2,6 @@ const mongoose= require("mongoose");
 
 // userId,userType,name, email,mobile, password,otp,status
 const tokenSchema = new mongoose.Schema({ 
-
     userId: {
         type:mongoose.Schema.Types.ObjectId,
         ref: "User"
@@ -14,8 +13,6 @@ const tokenSchema = new mongoose.Schema({
     },
     otp:String,
     email:String,
-
-
 })
 
 module.exports = mongoose.model("Token", tokenSchema);
